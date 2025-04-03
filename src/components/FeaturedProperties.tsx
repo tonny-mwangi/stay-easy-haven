@@ -4,6 +4,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Star, MapPin } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 type Property = {
   id: number;
@@ -13,6 +14,58 @@ type Property = {
   rating: number;
   image_url: string;
 };
+
+// Fallback properties data
+const fallbackProperties = [
+  {
+    id: 1,
+    name: "Luxury Ocean View Villa",
+    location: "Malibu, CA",
+    price: 350,
+    rating: 4.9,
+    image_url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: 2,
+    name: "Downtown Loft",
+    location: "New York, NY",
+    price: 200,
+    rating: 4.7,
+    image_url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: 3,
+    name: "Mountain Cabin Retreat",
+    location: "Aspen, CO",
+    price: 275,
+    rating: 4.8,
+    image_url: "https://images.unsplash.com/photo-1518732714860-b62714ce0c59?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: 4,
+    name: "Beachfront Bungalow",
+    location: "Miami, FL",
+    price: 320,
+    rating: 4.5,
+    image_url: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: 5,
+    name: "Historic City Apartment",
+    location: "Paris, France",
+    price: 230,
+    rating: 4.6,
+    image_url: "https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: 6,
+    name: "Lakeside Cottage",
+    location: "Lake Tahoe, CA",
+    price: 190,
+    rating: 4.4,
+    image_url: "https://images.unsplash.com/photo-1444201983204-c43cbd584d93?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+  },
+];
 
 const FeaturedProperties = () => {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -27,41 +80,23 @@ const FeaturedProperties = () => {
           .limit(6);
         
         if (error) {
-          throw error;
-        }
-        
-        if (data) {
+          console.error('Error fetching properties:', error);
+          // Show toast notification
+          toast.error("Couldn't load properties from database", {
+            description: "Using sample properties instead",
+          });
+          // Use fallback data
+          setProperties(fallbackProperties);
+        } else if (data && data.length > 0) {
           setProperties(data as Property[]);
+        } else {
+          // If no data or empty array, use fallback
+          console.log("No properties found in database, using fallback data");
+          setProperties(fallbackProperties);
         }
       } catch (error) {
         console.error('Error fetching properties:', error);
-        // Use fallback data if fetch fails
-        setProperties([
-          {
-            id: 1,
-            name: "Luxury Ocean View Villa",
-            location: "Malibu, CA",
-            price: 350,
-            rating: 4.9,
-            image_url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-          },
-          {
-            id: 2,
-            name: "Downtown Loft",
-            location: "New York, NY",
-            price: 200,
-            rating: 4.7,
-            image_url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-          },
-          {
-            id: 3,
-            name: "Mountain Cabin Retreat",
-            location: "Aspen, CO",
-            price: 275,
-            rating: 4.8,
-            image_url: "https://images.unsplash.com/photo-1518732714860-b62714ce0c59?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-          },
-        ]);
+        setProperties(fallbackProperties);
       } finally {
         setLoading(false);
       }
@@ -73,7 +108,7 @@ const FeaturedProperties = () => {
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(3)].map((_, index) => (
+        {[...Array(6)].map((_, index) => (
           <Card key={index} className="overflow-hidden">
             <Skeleton className="h-48" />
             <CardContent className="p-4">
