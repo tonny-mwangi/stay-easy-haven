@@ -7,9 +7,11 @@ import { toast } from "@/hooks/use-toast";
 type AuthContextType = {
   user: User | null;
   loading: boolean;
+  isEmailVerified: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  resendVerificationEmail: (email: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,6 +19,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+
+  // Check if the user's email is verified
+  const checkEmailVerification = (user: User | null) => {
+    if (user) {
+      // If email_confirmed_at is not null, the email is verified
+      setIsEmailVerified(user.email_confirmed_at !== null);
+    } else {
+      setIsEmailVerified(false);
+    }
+  };
 
   useEffect(() => {
     // Check for active session on mount
@@ -24,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase.auth.getSession();
       if (!error && data.session) {
         setUser(data.session.user);
+        checkEmailVerification(data.session.user);
       }
       setLoading(false);
     };
@@ -35,8 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         if (session?.user) {
           setUser(session.user);
+          checkEmailVerification(session.user);
         } else {
           setUser(null);
+          setIsEmailVerified(false);
         }
         setLoading(false);
       }
@@ -101,6 +117,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const resendVerificationEmail = async (email: string) => {
+    try {
+      const { data, error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+      });
+      
+      if (error) {
+        toast({
+          title: "Failed to resend verification email",
+          description: error.message,
+          variant: "destructive",
+        });
+        return Promise.reject(error);
+      }
+      
+      toast({
+        title: "Verification email sent",
+        description: "Please check your inbox and spam folder.",
+      });
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Resend verification email error:", error);
+      return Promise.reject(error);
+    }
+  };
+
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -123,7 +166,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      isEmailVerified, 
+      signIn, 
+      signUp, 
+      signOut,
+      resendVerificationEmail 
+    }}>
       {children}
     </AuthContext.Provider>
   );

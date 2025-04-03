@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X, User, Mail, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import AuthDialog from "@/components/AuthDialog";
@@ -17,7 +17,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authDialogTab, setAuthDialogTab] = useState<"signIn" | "signUp">("signIn");
-  const { user, signOut } = useAuth();
+  const { user, isEmailVerified, signOut } = useAuth();
 
   const openSignIn = () => {
     setAuthDialogTab("signIn");
@@ -69,11 +69,21 @@ const Navbar = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
+                    {isEmailVerified ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Mail className="h-4 w-4 text-orange-500" />
+                    )}
                     {user.email?.split('@')[0] || 'Account'}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  {!isEmailVerified && (
+                    <DropdownMenuItem className="text-orange-500 flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      Email not verified
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem>My Bookings</DropdownMenuItem>
                   <DropdownMenuItem>Profile</DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -103,8 +113,16 @@ const Navbar = () => {
             <div className="flex flex-col space-y-2 mt-4 px-3">
               {user ? (
                 <>
-                  <div className="px-3 py-2 text-sm font-medium">
+                  <div className="px-3 py-2 text-sm font-medium flex items-center gap-2">
+                    {isEmailVerified ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Mail className="h-4 w-4 text-orange-500" />
+                    )}
                     Signed in as {user.email}
+                    {!isEmailVerified && (
+                      <span className="text-orange-500 text-xs">(not verified)</span>
+                    )}
                   </div>
                   <Button variant="outline" className="w-full" onClick={() => {}}>
                     My Bookings
