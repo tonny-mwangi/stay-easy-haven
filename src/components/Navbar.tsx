@@ -1,11 +1,37 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
+import AuthDialog from "@/components/AuthDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [authDialogTab, setAuthDialogTab] = useState<"signIn" | "signUp">("signIn");
+  const { user, signOut } = useAuth();
+
+  const openSignIn = () => {
+    setAuthDialogTab("signIn");
+    setAuthDialogOpen(true);
+  };
+
+  const openSignUp = () => {
+    setAuthDialogTab("signUp");
+    setAuthDialogOpen(true);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-20">
@@ -38,8 +64,30 @@ const Navbar = () => {
             <Link to="/properties" className="font-medium hover:text-primary">Properties</Link>
             <Link to="/about" className="font-medium hover:text-primary">About</Link>
             <Link to="/contact" className="font-medium hover:text-primary">Contact</Link>
-            <Button variant="outline" className="mr-2">Sign In</Button>
-            <Button>Sign Up</Button>
+            
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    {user.email?.split('@')[0] || 'Account'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem>My Bookings</DropdownMenuItem>
+                  <DropdownMenuItem>Profile</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>Sign Out</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button variant="outline" className="mr-2" onClick={openSignIn}>
+                  Sign In
+                </Button>
+                <Button onClick={openSignUp}>Sign Up</Button>
+              </>
+            )}
           </nav>
         </div>
       </div>
@@ -53,12 +101,42 @@ const Navbar = () => {
             <Link to="/about" className="block px-3 py-2 rounded-md font-medium hover:bg-gray-100">About</Link>
             <Link to="/contact" className="block px-3 py-2 rounded-md font-medium hover:bg-gray-100">Contact</Link>
             <div className="flex flex-col space-y-2 mt-4 px-3">
-              <Button variant="outline" className="w-full">Sign In</Button>
-              <Button className="w-full">Sign Up</Button>
+              {user ? (
+                <>
+                  <div className="px-3 py-2 text-sm font-medium">
+                    Signed in as {user.email}
+                  </div>
+                  <Button variant="outline" className="w-full" onClick={() => {}}>
+                    My Bookings
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={() => {}}>
+                    Profile
+                  </Button>
+                  <Button className="w-full" onClick={handleSignOut}>
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" className="w-full" onClick={openSignIn}>
+                    Sign In
+                  </Button>
+                  <Button className="w-full" onClick={openSignUp}>
+                    Sign Up
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
       )}
+      
+      {/* Auth Dialog */}
+      <AuthDialog 
+        isOpen={authDialogOpen} 
+        onClose={() => setAuthDialogOpen(false)} 
+        initialTab={authDialogTab} 
+      />
     </header>
   );
 };
