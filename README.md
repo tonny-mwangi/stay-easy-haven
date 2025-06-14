@@ -47,3 +47,6 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+
+## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
